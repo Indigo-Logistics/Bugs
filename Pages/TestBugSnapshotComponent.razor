@@ -1,0 +1,12 @@
+﻿@page "/TestBugSnapshotComponent"
+
+@using SkiaSharp.Views.Blazor;
+@using SkiaSharp;
+
+<div>
+	<SKCanvasView @ref="skiaView" OnPaintSurface="@OnPaintSurface" @onmousemove="OnMouseMove" style="height:2200px;width:2300px" />
+</div>
+
+@code {
+
+}
