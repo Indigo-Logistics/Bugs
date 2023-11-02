@@ -1,0 +1,109 @@
+﻿@page "/TestBugSnapshotComponent_canvas"
+
+@using SkiaSharp.Views.Blazor;
+@using SkiaSharp;
+
+<h3>Canvas</h3>
+
+
+<div>
+	<SKCanvasView @ref="skiaView"
+								OnPaintSurface="@OnPaintSurface"
+	@onpointerdown="OnPointerDown"
+	@onpointerup="OnPointerUp"
+	@onmousemove="OnMouseMove"
+	@onmousedown="OnMouseDown"
+								style="height:2000px;width:8000px" />
+</div>
+
+
+
+@code {
+	SKCanvasView skiaView = null!;
+	Boolean firstRun = true;
+	int counterSnapshots = 0;
+	SKPoint mouseLocation;
+	SKSurface? mySurface;
+
+	private void DrawBackground(SKCanvas canvas)
+	{
+		//var canvas = e.Surface.Canvas;
+
+		Random rand = new Random();
+
+		var width = 5000;
+		var height = 2000;
+
+		canvas.Clear(SKColor.Parse("#003366"));
+		int lineCount = 100;
+		for (int i = 0; i < lineCount; i++)
+		{
+			float lineWidth = rand.Next(1, 10);
+			var lineColor = new SKColor(
+							red: (byte)rand.Next(255),
+							green: (byte)rand.Next(255),
+							blue: (byte)rand.Next(255),
+							alpha: (byte)rand.Next(255));
+
+			var linePaint = new SKPaint
+				{
+					Color = lineColor,
+					StrokeWidth = lineWidth,
+					IsAntialias = true,
+					Style = SKPaintStyle.Stroke
+				};
+
+			int x1 = rand.Next(width);
+			int y1 = rand.Next(height);
+			int x2 = rand.Next(width);
+			int y2 = rand.Next(height);
+			canvas.DrawLine(x1, y1, x2, y2, linePaint);
+		}
+	}
+
+	private void OnPaintSurface(SKPaintSurfaceEventArgs e)
+	{
+		var canvas = e.Surface.Canvas;
+		SKRect rect1 = new SKRect(0, 0, e.Info.Rect.Width, e.Info.Rect.Height);
+
+		if (firstRun)
+		{
+			var info = new SKImageInfo(e.Info.Rect.Width, e.Info.Rect.Height);
+			mySurface = SKSurface.Create(info);
+			using (var canvas1 = mySurface.Canvas)
+				DrawBackground(canvas1); 
+
+			firstRun = false;
+		}
+		else
+		{
+			using (var layerBackGround1 = mySurface?.Snapshot())
+			{
+				canvas.DrawImage(layerBackGround1, rect1);
+			}
+
+			using (SKPaint paint = new SKPaint { Style = SKPaintStyle.Stroke, Color = SKColors.Red })
+			{
+				canvas.DrawCircle(mouseLocation, 100, paint);
+			}
+			Console.WriteLine($"Restore Snapshot Number Restore {counterSnapshots++}");
+		}
+	}
+
+
+	private void OnMouseMove(MouseEventArgs e)
+	{
+		mouseLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+
+		skiaView.Invalidate();
+	}
+	private void OnMouseDown(MouseEventArgs e)
+	{
+	}
+
+	void OnPointerUp(PointerEventArgs e)
+	{ }
+
+	void OnPointerDown(PointerEventArgs e)
+	{ }
+}
